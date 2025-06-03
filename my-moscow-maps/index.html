@@ -3,141 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Интерактивные Карты Москвы</title>
+    <title>Интерактивные Карты Москвы (Ленивая Загрузка)</title>
     <style>
         /* Стили для основного текста и фона страницы */
         body {
-            font-family: 'Arial', sans-serif; /* Используем стандартный шрифт */
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f0f2f5; /* Светло-серый фон для страницы */
+            background-color: #f0f2f5;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Центрируем содержимое страницы */
-            color: #333; /* Основной цвет текста */
+            align-items: center;
+            color: #333;
         }
 
         /* Стили для заголовка страницы */
         h1 {
             text-align: center;
             margin-bottom: 30px;
-            color: #1a237e; /* Темно-синий цвет для заголовка */
+            color: #1a237e;
         }
 
         /* Контейнер для всех iframe с картами */
         .maps-main-container {
-            width: 95%; /* Ширина контейнера с картами */
-            max-width: 1200px; /* Максимальная ширина для больших экранов */
+            width: 95%;
+            max-width: 1200px;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Центрируем iframe внутри этого контейнера */
+            align-items: center;
         }
 
         /* Стили для каждого iframe, в котором будет отображаться карта */
         .map-iframe {
-            width: 100%; /* iframe занимает всю ширину родительского контейнера */
+            width: 100%;
             height: 650px; /* Высота для каждой карты. Вы можете изменить это значение. */
-            border: 1px solid #d0d0d0; /* Тонкая серая рамка вокруг карты */
-            border-radius: 8px; /* Скругленные углы для рамки */
-            margin-bottom: 25px; /* Пробел между картами */
-            display: block; /* Убирает лишние отступы под iframe */
-            background-color: #ffffff; /* Белый фон для iframe, пока карта загружается */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Легкая тень для эффекта объема */
+            border: 1px solid #d0d0d0;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: block;
+            background-color: #ffffff; /* Белый фон, пока карта не загружена или загружается */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-
-        /* Стили для подписей к картам (если решите их добавить) */
-        .map-caption {
+        
+        /* Стили для блока сообщения об ошибке загрузки iframe */
+        .map-iframe-error {
+            width: 100%;
+            height: auto;
+            min-height: 150px;
+            border: 1px solid #e53935;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            box-sizing: border-box; 
             text-align: center;
             font-size: 0.9em;
-            color: #555;
-            margin-top: -15px; /* Помещаем подпись ближе к карте сверху */
-            margin-bottom: 25px; /* Отступ после подписи */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .map-iframe-error strong {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .map-iframe-error code {
+            background-color: #fce4ec;
+            padding: 2px 5px;
+            border-radius: 4px;
+            color: #ad1457;
         }
 
-        /* Сообщение о загрузке (если потребуется) */
+        /* Сообщение о загрузке */
         .loading-message {
             text-align: center;
             padding: 20px;
             font-style: italic;
             color: #777;
         }
+
+        /* Стили для блока с советами по отладке */
+        .debug-tips {
+            background-color: #fffbe6;
+            border: 1px solid #ffe58f;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 0.95em;
+        }
+        .debug-tips h3 {
+            margin-top: 0;
+            color: #d46b08;
+            font-size: 1.2em;
+        }
+        .debug-tips ul {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+        .debug-tips li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+         .debug-tips code {
+            background-color: #fff0c2;
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: #5c3c00;
+        }
     </style>
 </head>
 <body>
-    <h1>Моделирование пространственного распределения доходов на примере Москвы</h1>
+    <h1>ВКР Эмиль Тулиганов</h1>
+
+    <div class="debug-tips">
+        <h3>Советы по отладке "грустного смайлика" в картах Plotly:</h3>
+        <ul>
+            <li><strong>Ленивая загрузка активна:</strong> Карты теперь загружаются по мере прокрутки страницы. Если карта не отображается сразу, попробуйте прокрутить страницу вниз до ее местоположения.</li>
+            <li><strong>Проверьте каждую карту отдельно:</strong> Откройте HTML-файл карты (например, <code>moscow_map_1.html</code>) напрямую в браузере.</li>
+            <li><strong>Проверьте пути к файлам карт:</strong> Убедитесь, что путь <code>maps/</code> (<code>mapsFolderPath</code>) указан правильно.</li>
+            <li><strong>Используйте консоль разработчика (F12):</strong>
+                <ul>
+                    <li>На этой основной странице: ищите ошибки "404 Not Found".</li>
+                    <li><strong>Внутри проблемного iframe (на "смайлике"):</strong> Правый клик -> "Просмотреть код" -> вкладка "Консоль". Ошибки Plotly будут там.</li>
+                </ul>
+            </li>
+            <li><strong>Проверьте внутренние ресурсы карты:</strong> Если карты Plotly грузят данные (CSV, JSON), убедитесь, что пути к ним корректны относительно HTML-файла карты.</li>
+        </ul>
+    </div>
 
     <div class="maps-main-container" id="mapsMainContainer">
-        <!-- JavaScript будет вставлять iframe сюда -->
-        <div class="loading-message" id="loadingMessage">Загрузка карт...</div>
+        <div class="loading-message" id="loadingMessage">Подготовка списка карт...</div>
     </div>
 
     <script>
-        // Этот скрипт динамически создает и добавляет iframe для каждой карты.
-        // Это делает HTML-код чище и упрощает управление картами.
-
-        // Получаем контейнер, куда будем добавлять карты
         const mapsContainerElement = document.getElementById('mapsMainContainer');
         const loadingMessageElement = document.getElementById('loadingMessage');
 
-        const numberOfMaps = 21; // Общее количество карт
-        const mapFileNameBase = 'moscow_map_'; // Базовое имя файла карты
-        const mapsFolderPath = 'maps/'; // Путь к папке, где лежат ваши HTML-файлы карт
+        const numberOfMaps = 21;
+        const mapFileNameBase = 'moscow_map_';
+        const mapsFolderPath = 'maps/';
 
-        // Функция для создания и добавления одного iframe
-        function addMapIframe(mapIndex) {
+        let iframesProcessed = 0;
+
+        function checkAllIframesProcessed() {
+            iframesProcessed++;
+            if (iframesProcessed === numberOfMaps) {
+                if (loadingMessageElement) {
+                    // Можно изменить текст или полностью скрыть, если все загружено/обработано
+                    loadingMessageElement.textContent = 'Все карты были загружены или предпринята попытка загрузки.';
+                    // setTimeout(() => { loadingMessageElement.style.display = 'none'; }, 3000); // Скрыть через некоторое время
+                }
+            }
+        }
+
+        // --- Intersection Observer для ленивой загрузки ---
+        const observerOptions = {
+            root: null, // Наблюдение относительно viewport
+            rootMargin: '0px 0px 100px 0px', // Начать загрузку, когда iframe в 100px от нижней границы viewport
+            threshold: 0.01 // Запустить, как только хотя бы 1% элемента виден
+        };
+
+        const iframeObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const iframe = entry.target;
+                    const actualSrc = iframe.getAttribute('data-src');
+                    if (actualSrc && !iframe.getAttribute('src')) { // Загружаем только если src еще не установлен
+                        // console.log('Загрузка карты (ленивая):', actualSrc);
+                        iframe.src = actualSrc;
+                        // iframe.removeAttribute('data-src'); // Можно удалить, но не обязательно
+                    }
+                    // Важно: прекращаем наблюдение только после того, как src установлен.
+                    // Если src уже был, значит, это повторное пересечение, и мы уже не наблюдаем.
+                    // Однако, если мы не удаляем data-src, и src не установлен,
+                    // то при повторном пересечении (если unobserve не сработал сразу) мы можем снова установить src.
+                    // Поэтому лучше отписываться сразу после установки src.
+                    observer.unobserve(iframe);
+                }
+            });
+        }, observerOptions);
+
+        // Функция для создания и добавления одного iframe (теперь с data-src)
+        function createMapIframePlaceholder(mapIndex) {
             const iframeElement = document.createElement('iframe');
-            iframeElement.src = `${mapsFolderPath}${mapFileNameBase}${mapIndex}.html`; // Путь к файлу карты
-            iframeElement.className = 'map-iframe'; // Применяем стили
-            iframeElement.title = `Интерактивная карта Москвы ${mapIndex}`; // Атрибут title для доступности
-            
-            // Установка атрибута sandbox для повышения безопасности.
-            // 'allow-scripts' - разрешает выполнение скриптов внутри iframe.
-            // 'allow-same-origin' - разрешает iframe доступ к ресурсам с того же домена.
-            // Если ваши карты требуют других разрешений (например, открытие ссылок, форм),
-            // вы можете добавить 'allow-popups', 'allow-forms'.
-            // Для интерактивных карт, созданных вами и находящихся на том же сайте,
-            // 'allow-scripts allow-same-origin' обычно достаточно.
+            const mapDataSrc = `${mapsFolderPath}${mapFileNameBase}${mapIndex}.html`;
+
+            iframeElement.setAttribute('data-src', mapDataSrc);
+            // src НЕ устанавливаем здесь, это сделает IntersectionObserver
+            // iframeElement.src = 'about:blank'; // Можно установить "пустой" src для валидности HTML, если требуется
+
+            iframeElement.className = 'map-iframe'; // Класс для стилей
+            iframeElement.title = `Интерактивная карта Москвы ${mapIndex}`;
             iframeElement.sandbox = "allow-scripts allow-same-origin";
 
-            // Можно добавить обработчик загрузки, чтобы убрать сообщение "Загрузка..."
-            // или показать ошибки, если карта не загрузилась.
+            // Обработчики onload и onerror сработают, когда IntersectionObserver установит src
             iframeElement.onload = () => {
-                // console.log(`Карта ${mapIndex} загружена.`);
-                // Можно добавить логику, чтобы скрыть общее сообщение о загрузке,
-                // когда все карты загружены, или индивидуальные индикаторы.
-            };
-            iframeElement.onerror = () => {
-                console.error(`Ошибка загрузки карты: ${iframeElement.src}`);
-                // Можно отобразить сообщение об ошибке вместо iframe
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'map-iframe'; // Используем те же стили для размеров
-                errorDiv.style.textAlign = 'center';
-                errorDiv.style.paddingTop = '50px';
-                errorDiv.style.color = 'red';
-                errorDiv.textContent = `Не удалось загрузить карту: ${mapFileNameBase}${mapIndex}.html. Проверьте путь и имя файла.`;
-                mapsContainerElement.insertBefore(errorDiv, iframeElement); // Вставляем сообщение об ошибке перед (неудачным) iframe
-                iframeElement.remove(); // Удаляем iframe, который не смог загрузиться
+                // console.log(`Карта ${iframeElement.src} успешно загружена.`);
+                checkAllIframesProcessed();
             };
 
+            iframeElement.onerror = () => {
+                const sourceForError = iframeElement.getAttribute('data-src') || iframeElement.src || 'неизвестный источник';
+                console.error(`Критическая ошибка: Не удалось загрузить iframe для карты: ${sourceForError}.`);
+                
+                iframeElement.remove(); // Удаляем iframe, который не смог загрузиться
+
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'map-iframe-error';
+                errorDiv.innerHTML = `<strong>Ошибка загрузки карты №${mapIndex}</strong><br>
+                                     Не удалось загрузить файл: <code>${mapFileNameBase}${mapIndex}.html</code> (из <code>${mapDataSrc}</code>)<br>
+                                     Ожидаемый путь: <code>${mapsFolderPath}${mapFileNameBase}${mapIndex}.html</code><br><br>
+                                     Пожалуйста, проверьте правильность пути и имени файла.`;
+                mapsContainerElement.appendChild(errorDiv);
+                checkAllIframesProcessed(); // Учитываем эту ошибку
+            };
 
             mapsContainerElement.appendChild(iframeElement);
-
-            // Пример добавления подписи под картой (опционально)
-            // const captionElement = document.createElement('p');
-            // captionElement.className = 'map-caption';
-            // captionElement.textContent = `Карта Москвы - Часть ${mapIndex}`;
-            // mapsContainerElement.appendChild(captionElement);
+            iframeObserver.observe(iframeElement); // Начинаем наблюдать за этим iframe
         }
 
-        // Добавляем все карты на страницу
-        for (let i = 1; i <= numberOfMaps; i++) {
-            addMapIframe(i);
-        }
-
-        // Убираем сообщение о загрузке после попытки добавить все iframe
-        // (можно сделать это умнее, отслеживая загрузку каждого iframe)
-        if (loadingMessageElement) {
-            loadingMessageElement.style.display = 'none';
+        // --- Начало процесса создания плейсхолдеров для карт ---
+        if (numberOfMaps > 0) {
+            if (loadingMessageElement) {
+                 loadingMessageElement.textContent = 'Создание списка карт для загрузки...';
+            }
+            for (let i = 1; i <= numberOfMaps; i++) {
+                createMapIframePlaceholder(i);
+            }
+            if (loadingMessageElement) {
+                // После создания всех плейсхолдеров, сообщение можно изменить или скрыть,
+                // так как основная загрузка будет происходить по мере прокрутки.
+                loadingMessageElement.textContent = 'Карты готовы к загрузке по мере прокрутки.';
+                 setTimeout(() => {
+                    if (iframesProcessed < numberOfMaps) { // Если не все еще загрузились/ошиблись
+                         loadingMessageElement.style.display = 'none';
+                    }
+                 }, 2000); // Скрываем через 2 секунды, если еще не все загружено
+            }
+        } else {
+            if (loadingMessageElement) {
+                loadingMessageElement.textContent = 'Нет карт для отображения (numberOfMaps равно 0).';
+            }
         }
     </script>
 </body>
