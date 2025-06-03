@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивные Карты Москвы</title>
+    <style>
+        /* Стили для основного текста и фона страницы */
+        body {
+            font-family: 'Arial', sans-serif; /* Используем стандартный шрифт */
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5; /* Светло-серый фон для страницы */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Центрируем содержимое страницы */
+            color: #333; /* Основной цвет текста */
+        }
+
+        /* Стили для заголовка страницы */
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1a237e; /* Темно-синий цвет для заголовка */
+        }
+
+        /* Контейнер для всех iframe с картами */
+        .maps-main-container {
+            width: 95%; /* Ширина контейнера с картами */
+            max-width: 1200px; /* Максимальная ширина для больших экранов */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Центрируем iframe внутри этого контейнера */
+        }
+
+        /* Стили для каждого iframe, в котором будет отображаться карта */
+        .map-iframe {
+            width: 100%; /* iframe занимает всю ширину родительского контейнера */
+            height: 650px; /* Высота для каждой карты. Вы можете изменить это значение. */
+            border: 1px solid #d0d0d0; /* Тонкая серая рамка вокруг карты */
+            border-radius: 8px; /* Скругленные углы для рамки */
+            margin-bottom: 25px; /* Пробел между картами */
+            display: block; /* Убирает лишние отступы под iframe */
+            background-color: #ffffff; /* Белый фон для iframe, пока карта загружается */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Легкая тень для эффекта объема */
+        }
+
+        /* Стили для подписей к картам (если решите их добавить) */
+        .map-caption {
+            text-align: center;
+            font-size: 0.9em;
+            color: #555;
+            margin-top: -15px; /* Помещаем подпись ближе к карте сверху */
+            margin-bottom: 25px; /* Отступ после подписи */
+        }
+
+        /* Сообщение о загрузке (если потребуется) */
+        .loading-message {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <h1>Коллекция Интерактивных Карт Москвы</h1>
+
+    <div class="maps-main-container" id="mapsMainContainer">
+        <!-- JavaScript будет вставлять iframe сюда -->
+        <div class="loading-message" id="loadingMessage">Загрузка карт...</div>
+    </div>
+
+    <script>
+        // Этот скрипт динамически создает и добавляет iframe для каждой карты.
+        // Это делает HTML-код чище и упрощает управление картами.
+
+        // Получаем контейнер, куда будем добавлять карты
+        const mapsContainerElement = document.getElementById('mapsMainContainer');
+        const loadingMessageElement = document.getElementById('loadingMessage');
+
+        const numberOfMaps = 21; // Общее количество карт
+        const mapFileNameBase = 'moscow_map_'; // Базовое имя файла карты
+        const mapsFolderPath = 'maps/'; // Путь к папке, где лежат ваши HTML-файлы карт
+
+        // Функция для создания и добавления одного iframe
+        function addMapIframe(mapIndex) {
+            const iframeElement = document.createElement('iframe');
+            iframeElement.src = `${mapsFolderPath}${mapFileNameBase}${mapIndex}.html`; // Путь к файлу карты
+            iframeElement.className = 'map-iframe'; // Применяем стили
+            iframeElement.title = `Интерактивная карта Москвы ${mapIndex}`; // Атрибут title для доступности
+            
+            // Установка атрибута sandbox для повышения безопасности.
+            // 'allow-scripts' - разрешает выполнение скриптов внутри iframe.
+            // 'allow-same-origin' - разрешает iframe доступ к ресурсам с того же домена.
+            // Если ваши карты требуют других разрешений (например, открытие ссылок, форм),
+            // вы можете добавить 'allow-popups', 'allow-forms'.
+            // Для интерактивных карт, созданных вами и находящихся на том же сайте,
+            // 'allow-scripts allow-same-origin' обычно достаточно.
+            iframeElement.sandbox = "allow-scripts allow-same-origin";
+
+            // Можно добавить обработчик загрузки, чтобы убрать сообщение "Загрузка..."
+            // или показать ошибки, если карта не загрузилась.
+            iframeElement.onload = () => {
+                // console.log(`Карта ${mapIndex} загружена.`);
+                // Можно добавить логику, чтобы скрыть общее сообщение о загрузке,
+                // когда все карты загружены, или индивидуальные индикаторы.
+            };
+            iframeElement.onerror = () => {
+                console.error(`Ошибка загрузки карты: ${iframeElement.src}`);
+                // Можно отобразить сообщение об ошибке вместо iframe
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'map-iframe'; // Используем те же стили для размеров
+                errorDiv.style.textAlign = 'center';
+                errorDiv.style.paddingTop = '50px';
+                errorDiv.style.color = 'red';
+                errorDiv.textContent = `Не удалось загрузить карту: ${mapFileNameBase}${mapIndex}.html. Проверьте путь и имя файла.`;
+                mapsContainerElement.insertBefore(errorDiv, iframeElement); // Вставляем сообщение об ошибке перед (неудачным) iframe
+                iframeElement.remove(); // Удаляем iframe, который не смог загрузиться
+            };
+
+
+            mapsContainerElement.appendChild(iframeElement);
+
+            // Пример добавления подписи под картой (опционально)
+            // const captionElement = document.createElement('p');
+            // captionElement.className = 'map-caption';
+            // captionElement.textContent = `Карта Москвы - Часть ${mapIndex}`;
+            // mapsContainerElement.appendChild(captionElement);
+        }
+
+        // Добавляем все карты на страницу
+        for (let i = 1; i <= numberOfMaps; i++) {
+            addMapIframe(i);
+        }
+
+        // Убираем сообщение о загрузке после попытки добавить все iframe
+        // (можно сделать это умнее, отслеживая загрузку каждого iframe)
+        if (loadingMessageElement) {
+            loadingMessageElement.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
